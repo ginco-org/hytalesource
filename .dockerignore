@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.github
+*.log
+*.md
+.vscode
+.env*
+tests
+playwright.config.ts
+java/.gradle
+java/build
