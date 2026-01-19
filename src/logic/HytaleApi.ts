@@ -398,9 +398,15 @@ async function downloadHytaleJar(patchline: string = 'release'): Promise<HytaleJ
     const total = contentLength ? parseInt(contentLength, 10) : 0;
 
     if (!zipResponse.body || total === 0) {
+        // No Content-Length header (common with proxied requests) - use blob() without streaming progress
+        console.log('Downloading jar (size unknown, no progress tracking available)...');
+        loadProgress.next(50); // Show some progress
         const blob = await zipResponse.blob();
+        loadProgress.next(70);
         const innerJarBlob = await extractInnerJar(blob);
+        loadProgress.next(85);
         await setCachedJar(patchline, versionInfo.version, innerJarBlob);
+        loadProgress.next(95);
         const jar = await openJar(innerJarBlob);
         loadProgress.next(undefined);
         console.log(`Successfully downloaded and cached Hytale ${patchline} patchline (version ${versionInfo.version})`);
