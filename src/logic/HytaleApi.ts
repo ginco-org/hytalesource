@@ -422,7 +422,7 @@ async function downloadHytaleJar(patchline: string = 'release'): Promise<HytaleJ
         loadProgress.next(percent);
     }
 
-    const blob = new Blob(chunks);
+    const blob = new Blob(chunks as BlobPart[]);
 
     // The download is a wrapper zip - extract Server/HytaleServer.jar from it
     const innerJarBlob = await extractInnerJar(blob);
@@ -445,7 +445,7 @@ async function extractInnerJar(wrapperBlob: Blob): Promise<Blob> {
     }
 
     const innerJarData = await innerJarEntry.bytes();
-    return new Blob([innerJarData]);
+    return new Blob([innerJarData as BlobPart]);
 }
 
 // Only start download after user has agreed to EULA and has valid credentials
