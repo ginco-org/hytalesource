@@ -27,10 +27,6 @@ class JarImpl implements Jar {
         zip.entries.forEach(entry => {
             this.entries[entry.name] = entry;
         });
-        console.log(`Jar opened with ${Object.keys(this.entries).length} entries`);
-        // Log first 5 entries to see the structure
-        const keys = Object.keys(this.entries).slice(0, 5);
-        console.log('Sample entries:', keys);
     }
 }
 
