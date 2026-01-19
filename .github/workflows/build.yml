@@ -1,0 +1,26 @@
+# Build workflow for HytaleSource
+# Note: GitHub Pages deployment (publish.yml) was removed because this app
+# requires a backend proxy for Hytale OAuth and API requests (CORS).
+# To deploy, use a hosting solution that supports server-side proxying
+# (e.g., Vercel, Cloudflare Workers, or a custom server).
+
+name: Build
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+      - run: ./gradlew build
+        working-directory: java
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

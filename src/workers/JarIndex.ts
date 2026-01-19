@@ -1,0 +1,174 @@
+import { BehaviorSubject, distinctUntilChanged, map, shareReplay } from "rxjs";
+import { hytaleJar, type HytaleJar } from "../logic/HytaleApi";
+import type { ClassDataString } from "./JarIndexWorker";
+
+export type Class = string;
+export type Method = `${string}:${string}:${string}`;
+export type Field = `${string}:${string}:${string}`;
+export type UsageKey = Class | Method | Field;
+
+export type UsageString =
+    | `c:${Class}`
+    | `m:${Method}`
+    | `f:${Field}`;
+
+export interface ClassData {
+    className: string;
+    superName: string;
+    accessFlags: number;
+    interfaces: string[];
+}
+
+export function parseClassData(data: ClassDataString): ClassData {
+    const [className, superName, accessFlagsStr, interfacesStr] = data.split("|");
+    return {
+        className,
+        superName,
+        accessFlags: parseInt(accessFlagsStr, 10),
+        interfaces: interfacesStr ? interfacesStr.split(",").filter(i => i.length > 0) : []
+    };
+}
+
+type JarIndexWorker = typeof import("./JarIndexWorker");
+
+// Percent complete is total >= 0
+export const indexProgress = new BehaviorSubject<number>(-1);
+
+export const jarIndex = hytaleJar.pipe(
+    distinctUntilChanged(),
+    map(jar => new JarIndex(jar)),
+    shareReplay({ bufferSize: 1, refCount: false })
+);
+
+export class JarIndex {
+    readonly hytaleJar: HytaleJar;
+    readonly workers: ReturnType<typeof createWrorker>[];
+
+    private indexPromise: Promise<void> | null = null;
+    private classDataCache: ClassData[] | null = null;
+
+    constructor(hytaleJar: HytaleJar) {
+        this.hytaleJar = hytaleJar;
+
+        const threads = navigator.hardwareConcurrency || 4;
+        this.workers = Array.from({ length: threads }, () => createWrorker());
+
+        console.log(`Created JarIndex with ${threads} workers`);
+    }
+
+    async indexJar(): Promise<void> {
+        if (!this.indexPromise) {
+            this.indexPromise = this.performIndexing();
+        }
+        return this.indexPromise;
+    }
+
+    private async performIndexing(): Promise<void> {
+        try {
+            const startTime = performance.now();
+
+            indexProgress.next(0);
+            console.log(`Indexing hytale jar using ${this.workers.length} workers`);
+
+            const jar = this.hytaleJar.jar;
+            const classNames = Object.keys(jar.entries)
+                .filter(name => name.endsWith(".class"));
+
+            let promises: Promise<number>[] = [];
+
+            let taskQueue = [...classNames];
+            let completed = 0;
+            let lastProgressUpdate = 0;
+
+            for (let i = 0; i < this.workers.length; i++) {
+                const worker = this.workers[i];
+
+                promises.push(new Promise(async (resolve) => {
+                    while (true) {
+                        const nextTask = taskQueue.pop();
+
+                        if (!nextTask) {
+                            const indexed = worker.getUsageSize();
+                            resolve(indexed);
+                            return;
+                        }
+
+                        const entry = jar.entries[nextTask];
+                        const data = await entry.bytes();
+
+                        await worker.index(data.buffer);
+
+                        completed++;
+
+                        // Only update progress every 1% or every 50 classes, whichever is smaller
+                        const progressThreshold = Math.max(1, Math.floor(classNames.length / 100));
+                        if (completed - lastProgressUpdate >= progressThreshold) {
+                            lastProgressUpdate = completed;
+                            indexProgress.next(Math.round((completed / classNames.length) * 100));
+                        }
+                    }
+                }));
+            }
+
+            const indexedCounts = await Promise.all(promises);
+            const totalIndexed = indexedCounts.reduce((sum, count) => sum + count, 0);
+
+            const endTime = performance.now();
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+            console.log(`Indexing completed in ${duration} seconds. Total indexed: ${totalIndexed}`);
+            indexProgress.next(-1);
+        } catch (error) {
+            // Reset promise on error so indexing can be retried
+            this.indexPromise = null;
+            throw error;
+        }
+    }
+
+    async getUsage(key: UsageKey): Promise<UsageString[]> {
+        await this.indexJar();
+
+        let results: Promise<UsageString[]>[] = [];
+
+        for (const worker of this.workers) {
+            results.push(worker.getUsage(key));
+        }
+
+        return Promise.all(results).then(arrays => arrays.flat());
+    }
+
+    async getClassData(): Promise<ClassData[]> {
+        if (this.classDataCache) {
+            return this.classDataCache;
+        }
+
+        await this.indexJar();
+
+        let results: Promise<ClassDataString[]>[] = [];
+
+        for (const worker of this.workers) {
+            results.push(worker.getClassData());
+        }
+
+        const classDataStrings = await Promise.all(results).then(arrays => arrays.flat());
+        this.classDataCache = classDataStrings.map(parseClassData);
+
+        return this.classDataCache;
+    }
+}
+
+let bytecodeWorker: JarIndexWorker | null = null;
+
+export async function getBytecode(classData: ArrayBufferLike[]): Promise<string> {
+    if (!bytecodeWorker) {
+        bytecodeWorker = createWrorker();
+    }
+    return bytecodeWorker.getBytecode(classData);
+}
+
+function createWrorker() {
+    return new ComlinkWorker<JarIndexWorker>(
+        new URL("./JarIndexWorker", import.meta.url),
+        {
+        }
+    );
+}

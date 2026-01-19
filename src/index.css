@@ -1,0 +1,89 @@
+body {
+  background-color: #121212;
+}
+
+/* Prevent scrolling the body */
+html, body {margin: 0; height: 100%; overflow: hidden}
+
+/* Webkit adds scrollbars as element selectors rather than allowing the element to control their style */
+.webkit-scrollbar-hide::-webkit-scrollbar {
+    display: none
+}
+
+.class-token-decoration {
+  color: #71c6b1 !important;
+}
+
+.field-token-decoration {
+  color: #aadafa !important;
+}
+
+.method-token-decoration {
+  color: #dcdcaf !important;
+}
+
+.parameter-token-decoration {
+  color: #aadafa !important;
+}
+
+.local-token-decoration {
+  color: #aadafa !important;
+}
+
+.class-token-decoration-pointer {
+  color: #71c6b1 !important;
+  cursor: pointer;
+}
+
+/* Control comment marker color, eg "/*" */
+.mtk7 {
+  color: #6a9955 !important;
+  font-style: italic;
+}
+
+/* Control comment color, eg what is inside "/*" */
+.mtk7.method-token-decoration {
+  color: #6a9955 !important;
+  font-style: italic;
+}
+
+.field-token-decoration-pointer {
+  color: #aadafa !important;
+  cursor: pointer;
+}
+
+.method-token-decoration-pointer {
+  color: #dcdcaf !important;
+  cursor: pointer;
+}
+
+.parameter-token-decoration-pointer {
+  color: #aadafa !important;
+  cursor: pointer;
+}
+
+.local-token-decoration-pointer {
+  color: #aadafa !important;
+  cursor: pointer;
+}
+
+/* Highlighted line for line linking */
+.highlighted-line {
+  background-color: rgba(255, 255, 100, 0.05) !important;
+}
+
+.highlighted-line-glyph {
+  background-color: rgba(255, 255, 100, 0.3) !important;
+  width: 4px !important;
+}
+
+/* Stop icon & text in file tree from wrapping */
+.ant-tree-node-content-wrapper {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+/* Stop text in file tree from wrapping */
+.ant-tree-title {
+    white-space: nowrap;
+}

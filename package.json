@@ -1,0 +1,42 @@
+{
+  "name": "hytalesrc",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:javadoc": "vite --mode javadoc",
+    "build": "tsc -b && vite build",
+    "build:javadoc": "tsc -b && vite build --mode javadoc",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
+  },
+  "dependencies": {
+    "@katana-project/zip": "^0.7.1",
+    "@monaco-editor/react": "^4.7.0",
+    "@run-slicer/vf": "^0.3.2-1.11.2",
+    "@types/dagre": "^0.7.53",
+    "@xyflow/react": "^12.10.0",
+    "antd": "^5.28.0",
+    "comlink": "^4.4.2",
+    "dagre": "^0.8.5",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^24.6.0",
+    "@types/react": "^19.1.16",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.4",
+    "globals": "^16.4.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.7",
+    "vite-plugin-comlink": "^5.3.0",
+    "vitest": "^4.0.15"
+  }
+}
