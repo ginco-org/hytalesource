@@ -1,8 +1,9 @@
 # Stage 1: Build Java/TeaVM component
-FROM eclipse-temurin:21-jdk AS java-builder
+FROM eclipse-temurin:24-jdk AS java-builder
 
 WORKDIR /app/java
 COPY java/ .
+
 RUN chmod +x ./gradlew && ./gradlew build --no-daemon
 
 # Stage 2: Build Node.js frontend
