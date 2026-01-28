@@ -1,12 +1,9 @@
-import { Alert, Button, Checkbox, Modal, Space, Typography } from "antd";
+import { Button, Checkbox, Modal, Space } from "antd";
 import { useEffect } from "react";
 import { agreedEula } from "../logic/Settings";
-import { InfoCircleOutlined, LoadingOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { useObservable } from "../utils/UseObservable";
 import { BehaviorSubject } from "rxjs";
-import { needsAuth, initiateLogin, deviceAuthState, authError, cancelLogin } from "../logic/HytaleApi";
-
-const { Text, Link } = Typography;
 
 export const aboutModalOpen = new BehaviorSubject<boolean>(false);
 
@@ -21,52 +18,38 @@ export const AboutModalButton = () => {
 const AboutModal = () => {
     const accepted = useObservable(agreedEula.observable);
     const isModalOpen = useObservable(aboutModalOpen);
-    const authRequired = useObservable(needsAuth);
-    const deviceAuth = useObservable(deviceAuthState);
-    const error = useObservable(authError);
 
-    // Open modal automatically if EULA not accepted or authentication required
+    // Open modal automatically if EULA not accepted
     useEffect(() => {
-        if (!accepted || authRequired) {
+        if (!accepted) {
             aboutModalOpen.next(true);
         }
-    }, [authRequired, accepted]);
+    }, [accepted]);
 
-    // Close modal only when EULA is accepted AND no auth required
+    // Close modal when EULA is accepted
     useEffect(() => {
-        if (accepted && !authRequired) {
+        if (accepted) {
             aboutModalOpen.next(false);
         }
-    }, [accepted, authRequired]);
+    }, [accepted]);
 
     const handleCancel = () => {
         if (!accepted) {
             return;
         }
-        cancelLogin();
         aboutModalOpen.next(false);
-    };
-
-    const handleLogin = () => {
-        if (accepted) {
-            initiateLogin('release');
-        }
-    };
-
-    const handleCancelLogin = () => {
-        cancelLogin();
     };
 
     return (
         <Modal
             title="About HytaleSource"
-            closable={accepted && !deviceAuth}
+            closable={!!accepted}
             open={isModalOpen}
             onCancel={handleCancel}
             footer={null}
         >
             <Space direction="vertical" style={{ width: '100%' }}>
-                <p>A decompiled source code viewer for Hytale. The Hytale server jar is downloaded directly from Hypixel Studios' servers to your browser after authentication.</p>
+                <p>A decompiled source code viewer for Hytale. The Hytale server jar is downloaded from Hytale's public Maven repository.</p>
                 <p>The <a href="https://github.com/Vineflower/vineflower">Vineflower</a> decompiler is used after being compiled to wasm as part of the <a href="https://www.npmjs.com/package/@run-slicer/vf">@run-slicer/vf</a> project.</p>
 
                 <p style={{ fontSize: '0.9em', color: '#666' }}>
@@ -74,33 +57,6 @@ const AboutModal = () => {
                 </p>
 
                 <Eula />
-
-                {accepted && authRequired && !deviceAuth && (
-                    <>
-                        <p>The Hytale login is only used to get permission to download the server jar directly from Hypixel Studios' servers.</p>
-                        {error && <Alert type="error" message={error} style={{ marginBottom: 8 }} />}
-                        <Button type="primary" block onClick={handleLogin}>
-                            Login with Hytale Account
-                        </Button>
-                    </>
-                )}
-
-                {deviceAuth && (
-                    <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                        <p><LoadingOutlined spin /> Waiting for authorization...</p>
-                        <p>
-                            Go to <Link href={deviceAuth.verificationUriComplete || deviceAuth.verificationUri} target="_blank">
-                                {deviceAuth.verificationUri}
-                            </Link>
-                        </p>
-                        <p>
-                            and enter the code: <Text strong copyable style={{ fontSize: '1.2em' }}>{deviceAuth.userCode}</Text>
-                        </p>
-                        <Button onClick={handleCancelLogin} style={{ marginTop: 16 }}>
-                            Cancel
-                        </Button>
-                    </div>
-                )}
             </Space>
         </Modal>
     );
@@ -117,7 +73,7 @@ const Eula = () => {
         <Checkbox checked={agreedEula.value} onChange={e => {
             agreedEula.value = e.target.checked;
         }}>
-            I agree to use this tool for educational purposes only and understand that I need a valid Hytale account to access the server files.
+            I understand that the decompiled source code is the property of Hypixel Studios and agree not to redistribute or share it. I agree to use this tool for educational purposes only.
         </Checkbox>);
 };
 

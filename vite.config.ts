@@ -20,21 +20,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      '/oauth2': {
-        target: 'https://oauth.accounts.hytale.com',
+      '/maven': {
+        target: 'https://maven.hytale.com',
         changeOrigin: true,
         secure: true,
-      },
-      '/game-assets': {
-        target: 'https://account-data.hytale.com',
-        changeOrigin: true,
-        secure: true,
-      },
-      '/r2-proxy': {
-        target: 'https://ht-game-assets-release.de7106a42bcf6cf632edbccda3ea1394.r2.cloudflarestorage.com',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/r2-proxy/, ''),
+        rewrite: (path) => path.replace(/^\/maven/, ''),
       },
     },
   },
